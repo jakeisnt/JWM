@@ -44,6 +44,8 @@ namespace jwm {
         void minimize();
         void restore();
 
+        void setFullScreen(jboolean makeFullscreen);
+
         XIC getIC() const {
             return _ic;
         }

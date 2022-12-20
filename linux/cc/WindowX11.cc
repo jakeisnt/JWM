@@ -165,18 +165,26 @@ void WindowX11::restore() {
     }
 }
 
-void WindowX11::setFullScreen(boolean makeFullscreen) {
-    Atom wm_state   = XInternAtom (display, "_NET_WM_STATE", true );
-    Atom wm_fullscreen = XInternAtom (display, "_NET_WM_STATE_FULLSCREEN", true );
+void WindowX11::setFullScreen(jboolean makeFullscreen) {
+    // does interning an atom define it or just fetch it?
+    // Atom wm_state      = XInternAtom (_windowManager.display, "_NET_WM_STATE", true );
+    // Atom wm_fullscreen = XInternAtom (_windowManager.display, "_NET_WM_STATE_FULLSCREEN", true );
 
-    XChangeProperty(display, window, wm_state, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char *)&wm_fullscreen, 1);
+    XChangeProperty(_windowManager.display,
+                    _x11Window,
+                    _windowManager._atoms._NET_WM_STATE,
+                    XA_ATOM,
+                    32,
+                    PropModeReplace,
+                    // TODO: This might need to be mapped!
+                    (unsigned char *)&_windowManager._atoms._NET_WM_FULLSCREEN,
+                    1);
 }
 
-void WindowX11::isFullScreen() {
-    // get and convert
-    return _xGetWindowProperty(_windowManager.getAtoms()._NET_FRAME_EXTENTS, XA_CARDINAL, reinterpret_cast<unsigned char**>(&data));
-}
+// void WindowX11::isFullScreen() {
+//     // get and convert
+//     return _xGetWindowProperty(_windowManager.getAtoms()._NET_FRAME_EXTENTS, XA_CARDINAL, reinterpret_cast<unsigned char**>(&data));
+// }
 
 void WindowX11::getDecorations(int& left, int& top, int& right, int& bottom) {
     unsigned long* data = nullptr;
