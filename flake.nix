@@ -1,5 +1,9 @@
-{
+let
+  name = "JWM";
   description = "Cross-platform window management and OS integration library for Java";
+in
+{
+  inherit name description;
 
   inputs = {
     nixpkgs.url     = github:nixos/nixpkgs/release-22.05;
@@ -39,6 +43,7 @@
         ];
       in rec {
         devShells.default = pkgs.mkShell {
+          inherit name description;
           nativeBuildInputs = with pkgs; [
             jdk11
           ] ++ xDependencies;
