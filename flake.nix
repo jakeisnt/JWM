@@ -16,21 +16,26 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = import nixpkgs {inherit system;};
-        xDependencies = with pkgs; [
-          xorg.xorgserver
+        xDependencies = with pkgs; with xorg; [
+          xorgserver
 
           # development lib
-          xorg.libX11
+          libX11
 
           # xorg input modules
-          xorg.xf86inputevdev
-          xorg.xf86inputsynaptics
-          xorg.xf86inputlibinput
+          xf86inputevdev
+          xf86inputsynaptics
+          xf86inputlibinput
 
           # xorg video modules
-          xorg.xf86videointel
-          xorg.xf86videoati
-          xorg.xf86videonouveau
+          xf86videointel
+          xf86videoati
+          xf86videonouveau
+
+          # dyn libs
+          libXrandr
+          libXcursor
+          libXi
         ];
       in rec {
         devShells.default = pkgs.mkShell {
