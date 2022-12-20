@@ -19,6 +19,9 @@
         xDependencies = with pkgs; [
           xorg.xorgserver
 
+          # development lib
+          xorg.libX11
+
           # xorg input modules
           xorg.xf86inputevdev
           xorg.xf86inputsynaptics
@@ -39,6 +42,8 @@
             python3
             libGL
             ninja
+            cmake
+            gcc
           ];
 
           LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath (with pkgs; [ libGL ] ++ xDependencies)}:$LD_LIBRARY_PATH";
