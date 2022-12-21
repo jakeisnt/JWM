@@ -166,10 +166,8 @@ void WindowX11::restore() {
 }
 
 void WindowX11::setFullScreen(jboolean isFullScreen) {
-    // does interning an atom define it or just fetch it?
-    // Atom wm_state      = XInternAtom (_windowManager.display, "_NET_WM_STATE", true );
-    // Atom wm_fullscreen = XInternAtom (_windowManager.display, "_NET_WM_STATE_FULLSCREEN", true );
-
+    // TODO: This is not working! Do we need to send an event?
+    Atom wm_fullscreen = XInternAtom (_windowManager.display, "_NET_WM_STATE_FULLSCREEN", true );
 
     XChangeProperty(_windowManager.display,
                     _x11Window,
@@ -177,15 +175,13 @@ void WindowX11::setFullScreen(jboolean isFullScreen) {
                     XA_ATOM,
                     32,
                     PropModeReplace,
-                    // TODO: This might need to be mapped!
-                    (unsigned char *)&_windowManager.getAtoms()._NET_WM_FULLSCREEN,
-                    isFullScreen);
+                    (unsigned char *)&wm_fullscreen,
+                    1);
 }
 
+// TODO: Always returns true; we might have to deref it from an Atom?
 jboolean WindowX11::isFullScreen() {
-    // get and convert
     return _windowManager.getAtoms()._NET_WM_FULLSCREEN;
-    // return _xGetWindowProperty(_windowManager.getAtoms()._NET_FRAME_EXTENTS, XA_CARDINAL, reinterpret_cast<unsigned char**>(&data));
 }
 
 void WindowX11::getDecorations(int& left, int& top, int& right, int& bottom) {
