@@ -172,7 +172,7 @@ void WindowX11::setFullScreen(jboolean makeFullscreen) {
 
     XChangeProperty(_windowManager.display,
                     _x11Window,
-                    _windowManager._atoms._NET_WM_STATE,
+                    _windowManager.getAtoms()._NET_WM_STATE,
                     XA_ATOM,
                     32,
                     PropModeReplace,
