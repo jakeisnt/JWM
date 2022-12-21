@@ -165,10 +165,11 @@ void WindowX11::restore() {
     }
 }
 
-void WindowX11::setFullScreen(jboolean makeFullscreen) {
+void WindowX11::setFullScreen(jboolean isFullScreen) {
     // does interning an atom define it or just fetch it?
     // Atom wm_state      = XInternAtom (_windowManager.display, "_NET_WM_STATE", true );
     // Atom wm_fullscreen = XInternAtom (_windowManager.display, "_NET_WM_STATE_FULLSCREEN", true );
+
 
     XChangeProperty(_windowManager.display,
                     _x11Window,
@@ -178,13 +179,14 @@ void WindowX11::setFullScreen(jboolean makeFullscreen) {
                     PropModeReplace,
                     // TODO: This might need to be mapped!
                     (unsigned char *)&_windowManager.getAtoms()._NET_WM_FULLSCREEN,
-                    makeFullscreen);
+                    isFullScreen);
 }
 
-// void WindowX11::isFullScreen() {
-//     // get and convert
-//     return _xGetWindowProperty(_windowManager.getAtoms()._NET_FRAME_EXTENTS, XA_CARDINAL, reinterpret_cast<unsigned char**>(&data));
-// }
+jboolean WindowX11::isFullScreen() {
+    // get and convert
+    return _windowManager.getAtoms()._NET_WM_FULLSCREEN;
+    // return _xGetWindowProperty(_windowManager.getAtoms()._NET_FRAME_EXTENTS, XA_CARDINAL, reinterpret_cast<unsigned char**>(&data));
+}
 
 void WindowX11::getDecorations(int& left, int& top, int& right, int& bottom) {
     unsigned long* data = nullptr;
@@ -473,4 +475,16 @@ extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_jwm_WindowX11__1nSetMo
     jwm::WindowX11* instance = reinterpret_cast<jwm::WindowX11*>(jwm::classes::Native::fromJava(env, obj));
 
     instance->setCursor(static_cast<jwm::MouseCursor>(idx));
+}
+
+extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_jwm_WindowX11__1nSetFullScreen
+        (JNIEnv* env, jobject obj, jboolean isFullScreen) {
+    jwm::WindowX11* instance = reinterpret_cast<jwm::WindowX11*>(jwm::classes::Native::fromJava(env, obj));
+    instance->setFullScreen(isFullScreen);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_jwm_WindowX11__1nIsFullScreen
+        (JNIEnv* env, jobject obj) {
+    jwm::WindowX11* instance = reinterpret_cast<jwm::WindowX11*>(jwm::classes::Native::fromJava(env, obj));
+    return instance->isFullScreen();
 }
