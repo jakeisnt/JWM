@@ -173,9 +173,9 @@ void WindowX11::setFullScreen(jboolean isFullScreen) {
                     _x11Window,
                     _windowManager.getAtoms()._NET_WM_STATE,
                     XA_ATOM,
-                    32,
-                    PropModeReplace,
-                    (unsigned char *)&wm_fullscreen,
+                    32, // it's 32 bit
+                    PropModeReplace, // replacing the definition
+                    (unsigned char *)&wm_fullscreen, // deref the fullscreen atom
                     1);
 }
 
