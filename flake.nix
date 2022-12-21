@@ -45,8 +45,7 @@ in
         devShells.default = pkgs.mkShell {
           inherit name description;
           nativeBuildInputs = with pkgs; [
-            # jdk11
-            jdk17 # TODO
+            jdk17
           ] ++ xDependencies;
 
           buildInputs = with pkgs; [
