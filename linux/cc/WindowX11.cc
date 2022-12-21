@@ -177,8 +177,8 @@ void WindowX11::setFullScreen(jboolean makeFullscreen) {
                     32,
                     PropModeReplace,
                     // TODO: This might need to be mapped!
-                    (unsigned char *)&_windowManager._atoms._NET_WM_FULLSCREEN,
-                    1);
+                    (unsigned char *)&_windowManager.getAtoms()._NET_WM_FULLSCREEN,
+                    makeFullscreen);
 }
 
 // void WindowX11::isFullScreen() {
