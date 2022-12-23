@@ -165,22 +165,19 @@ void WindowX11::restore() {
     }
 }
 
-void WindowX11::setFullScreen(jboolean isFullScreen) {
-    // TODO: This is not working! Do we need to send an event?
-    Atom wm_fullscreen = XInternAtom (_windowManager.display, "_NET_WM_STATE_FULLSCREEN", true );
-
-    XChangeProperty(_windowManager.display,
+void WindowX11::setFullScreen(bool isFullScreen) {
+    XChangeProperty(_windowManager.getDisplay(),
                     _x11Window,
                     _windowManager.getAtoms()._NET_WM_STATE,
                     XA_ATOM,
-                    32, // it's 32 bit
+                    8, // it's 32 bit? what if its 8?
                     PropModeReplace, // replacing the definition
-                    (unsigned char *)&wm_fullscreen, // deref the fullscreen atom
+                    (const char*)&isFullScreen, // deref the fullscreen atom
                     1);
 }
 
 // TODO: Always returns true; we might have to deref it from an Atom?
-jboolean WindowX11::isFullScreen() {
+bool WindowX11::isFullScreen() {
     return _windowManager.getAtoms()._NET_WM_FULLSCREEN;
 }
 
@@ -482,5 +479,5 @@ extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_jwm_WindowX11__1nSetFu
 extern "C" JNIEXPORT jboolean JNICALL Java_io_github_humbleui_jwm_WindowX11__1nIsFullScreen
         (JNIEnv* env, jobject obj) {
     jwm::WindowX11* instance = reinterpret_cast<jwm::WindowX11*>(jwm::classes::Native::fromJava(env, obj));
-    return instance->isFullScreen();
+    return !!instance->isFullScreen();
 }
