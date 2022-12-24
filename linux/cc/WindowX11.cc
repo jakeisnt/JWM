@@ -188,12 +188,11 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     }
 
     XEvent xev;
-    Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
 
     memset(&xev, 0, sizeof(xev));
     xev.type = ClientMessage;
     xev.xclient.window = _x11Window;
-    xev.xclient.message_type = wm_state;
+    xev.xclient.message_type = _windowManager._atoms._NET_WM_STATE;
     xev.xclient.format = 32;
     xev.xclient.data.l[0] = isFullScreen ? _WM_ADD : _WM_REMOVE;
     xev.xclient.data.l[1] = _windowManager._atoms._NET_WM_STATE_FULLSCREEN;
@@ -202,7 +201,7 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
 
     // set bypass compositor hint
-    Atom bypass_compositor = XInternAtom(display, "_NET_WM_BYPASS_COMPOSITOR", False);
+    Atom bypass_compositor = XInternAtom(display, "_NET_WM_BYPASS_COMPOSITOR", True);
     unsigned long compositing_disable_on = 0; // By default, don't allow window compositing
 
     if (isFullScreen) {
