@@ -187,9 +187,6 @@ public class WindowX11 extends Window {
     @Override
     public Window setFullScreen(boolean value) {
         assert _onUIThread();
-        // cool, so my code doesn't work - but now we know this!
-        System.out.print("Making fullscreen: ");
-        System.out.println(value);
         _nSetFullScreen(value);
         return this;
     }
@@ -197,10 +194,7 @@ public class WindowX11 extends Window {
     @Override
     public boolean isFullScreen() {
         assert _onUIThread();
-        // TODO: this always returns true!
-        System.out.println(_nIsFullScreen());
-        return false;
-        // return _nIsFullScreen();
+        return _nIsFullScreen();
     }
 
     @ApiStatus.Internal public static native long _nMake();

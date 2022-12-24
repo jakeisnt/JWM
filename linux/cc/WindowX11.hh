@@ -82,6 +82,5 @@ namespace jwm {
         ILayer* _layer = nullptr;
         ::Window _x11Window = 0;
         XIC _ic;
-
     };
 }

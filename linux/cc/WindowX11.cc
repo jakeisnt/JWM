@@ -166,30 +166,17 @@ void WindowX11::restore() {
     }
 }
 
-
 void WindowX11::setFullScreen(bool isFullScreen) {
-    // Largely borrowed from https://github.com/godotengine/godot/blob/f7cf9fb148140b86ee5795110373a0d55ff32860/platform/linuxbsd/x11/display_server_x11.cpp
-
+    // NOTE: Largely borrowed from https://github.com/godotengine/godot/blob/f7cf9fb148140b86ee5795110373a0d55ff32860/platform/linuxbsd/x11/display_server_x11.cpp
     Display* display = _windowManager.display;
 
-    // This function migh be useful:
-    // _xSendEventToWM(_windowManager._atoms._NET_WM_STATE,
-    //                 1,
-    //                 _windowManager._atoms._NET_WM_STATE_MAXIMIZED_HORZ,
-    //                 _windowManager._atoms._NET_WM_STATE_MAXIMIZED_VERT,
-    //                 0,
-    //                 0);
-    //
-
-    // ERR_FAIL_COND(!windows.has(p_window));
-
-    // should the window be exclusively full screen (i.e. block out other popups?)
+    // Should the window be exclusively full screen (i.e. block out other popups).
+    // There isn't a HumbleUI setting for this, and my WM defaults to exclusive full-screen,
+    // (as does Windows, as I recall) so let's assume that we want the window to be exclusively fullscreen.
     bool isExclusiveFullScreen = true;
 
-    // TODO: figure out what this is
-    // p_enabled && !window_get_flag(WINDOW_FLAG_BORDERLESS, p_window)
-    if (isFullScreen) {
-        // remove decorations if the window is not already borderless
+    if (isFullScreen) { // and the window is not borderless:
+        // Remove window decorations to simulate full screen
         MotifHints hints;
         Atom property;
         hints.flags = 2;
@@ -200,13 +187,6 @@ void WindowX11::setFullScreen(bool isFullScreen) {
         }
     }
 
-    // TODO
-    // if (p_enabled) {
-    //     // Set the window as resizable to prevent window managers to ignore the fullscreen state flag.
-    //     _update_size_hints(p_window);
-    // }
-
-    // Using EWMH -- Extended Window Manager Hints
     XEvent xev;
     Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
     Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
@@ -224,43 +204,52 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 
     // set bypass compositor hint
     Atom bypass_compositor = XInternAtom(display, "_NET_WM_BYPASS_COMPOSITOR", False);
-    unsigned long compositing_disable_on = 0; // Use default.
+    unsigned long compositing_disable_on = 0; // By default, don't allow window compositing
 
-    // TODO
     if (isFullScreen) {
         if (isExclusiveFullScreen) {
-            compositing_disable_on = 1; // Force composition OFF to reduce overhead.
+            compositing_disable_on = 1; // Force compositing to disable for efficiency
         } else {
-            compositing_disable_on = 2; // Force composition ON to allow popup windows.
+            compositing_disable_on = 2; // Force composition on to allow pop-up windows
         }
     }
 
     if (bypass_compositor != None) {
-        XChangeProperty(display, _x11Window, bypass_compositor, XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&compositing_disable_on, 1);
+        XChangeProperty(display,
+                        _x11Window,
+                        bypass_compositor,
+                        XA_CARDINAL,
+                        32,
+                        PropModeReplace,
+                        (unsigned char *)&compositing_disable_on,
+                        1);
     }
 
     XFlush(display);
 
     if (!isFullScreen) {
-        // Reset the non-resizable flags if we un-set these before.
-        // TODO
-        // _update_size_hints(p_window);
-
-        // put back or remove decorations according to the last set borderless state
+        // Reset window decorations to their previous states
         MotifHints hints;
         Atom property;
         hints.flags = 2;
-        hints.decorations = 1; // wd.borderless ? 0 : 1;
+        hints.decorations = 1; // Add window borders back
         property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
         if (property != None) {
-            XChangeProperty(display, _x11Window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
+            XChangeProperty(display,
+                            _x11Window,
+                            property,
+                            property,
+                            32,
+                            PropModeReplace,
+                            (unsigned char *)&hints,
+                            5);
         }
     }
 }
 
-// TODO: Always returns true; we might have to deref it from an Atom?
-// maximize code window attributes might be useful?
 bool WindowX11::isFullScreen() {
+    // NOTE: Largely borrowed from https://github.com/godotengine/godot/blob/f7cf9fb148140b86ee5795110373a0d55ff32860/platform/linuxbsd/x11/display_server_x11.cpp
+
     Display* display = _windowManager.display;
 
     Atom property = XInternAtom(display, "_NET_WM_STATE", False);
