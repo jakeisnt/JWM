@@ -168,6 +168,10 @@ void WindowX11::restore() {
 
 
 void WindowX11::setFullScreen(bool isFullScreen) {
+    // Largely borrowed from https://github.com/godotengine/godot/blob/f7cf9fb148140b86ee5795110373a0d55ff32860/platform/linuxbsd/x11/display_server_x11.cpp
+
+    Display* display = _windowManager.display;
+
     // This function migh be useful:
     // _xSendEventToWM(_windowManager._atoms._NET_WM_STATE,
     //                 1,
@@ -177,16 +181,14 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     //                 0);
     //
 
-    Display* display = _windowManager.display;
-
     // ERR_FAIL_COND(!windows.has(p_window));
-    // WindowData &wd = windows[p_window];
+
+    // should the window be exclusively full screen (i.e. block out other popups?)
+    bool isExclusiveFullScreen = true;
 
     // TODO: figure out what this is
     // p_enabled && !window_get_flag(WINDOW_FLAG_BORDERLESS, p_window)
-    bool p_enabled = true;
-
-    if (true) {
+    if (isFullScreen) {
         // remove decorations if the window is not already borderless
         MotifHints hints;
         Atom property;
@@ -214,9 +216,7 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     xev.xclient.window = _x11Window;
     xev.xclient.message_type = wm_state;
     xev.xclient.format = 32;
-    xev.xclient.data.l[0] = p_enabled
-        ? 1L // _windowManager._atoms._NET_WM_STATE_ADD
-        : 0L; // _windowManager._atoms._NET_WM_STATE_REMOVE;
+    xev.xclient.data.l[0] = isFullScreen ? _WM_ADD : _WM_REMOVE;
     xev.xclient.data.l[1] = wm_fullscreen;
     xev.xclient.data.l[2] = 0;
 
@@ -227,13 +227,13 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     unsigned long compositing_disable_on = 0; // Use default.
 
     // TODO
-    // if (p_enabled) {
-    //     if (p_exclusive) {
+    if (isFullScreen) {
+        if (isExclusiveFullScreen) {
             compositing_disable_on = 1; // Force composition OFF to reduce overhead.
-    //     } else {
-    //         compositing_disable_on = 2; // Force composition ON to allow popup windows.
-    //     }
-    // }
+        } else {
+            compositing_disable_on = 2; // Force composition ON to allow popup windows.
+        }
+    }
 
     if (bypass_compositor != None) {
         XChangeProperty(display, _x11Window, bypass_compositor, XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&compositing_disable_on, 1);
@@ -241,7 +241,7 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 
     XFlush(display);
 
-    if (!p_enabled) {
+    if (!isFullScreen) {
         // Reset the non-resizable flags if we un-set these before.
         // TODO
         // _update_size_hints(p_window);
