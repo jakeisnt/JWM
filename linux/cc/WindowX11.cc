@@ -6,6 +6,7 @@
 #include "impl/JNILocal.hh"
 #include <X11/Xatom.h>
 #include <X11/extensions/sync.h>
+#include <X11/extensions/xf86vmode.h>
 
 
 using namespace jwm;
@@ -174,6 +175,9 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     Atom property;
     Display* display;
 
+    XF86VidModeModeInfo** mode_lines;
+    XF86VidModeModeInfo* video_mode;
+
     hints.flags = 2;        // Specify that we're changing the window decorations.
     hints.decorations = 0;  // 0 (false) means that window decorations should go bye-bye.
 
@@ -183,6 +187,9 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 
 
     display = _windowManager.getDisplay();
+
+    video_mode = XF86VidModeGetAllModeLines(display, _x11Window, mode_lines);
+
     XChangeProperty(display,
                     _x11Window,
                     property,
@@ -238,7 +245,8 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 // TODO: Always returns true; we might have to deref it from an Atom?
 // maximize code window attributes might be useful?
 bool WindowX11::isFullScreen() {
-    return _windowManager.getAtoms()._NET_WM_STATE_FULLSCREEN;
+    return false;
+    // return _windowManager.getAtoms()._NET_WM_STATE_FULLSCREEN;
 }
 
 void WindowX11::getDecorations(int& left, int& top, int& right, int& bottom) {
