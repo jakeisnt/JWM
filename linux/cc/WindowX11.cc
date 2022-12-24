@@ -189,7 +189,6 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 
     XEvent xev;
     Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
-    Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
 
     memset(&xev, 0, sizeof(xev));
     xev.type = ClientMessage;
@@ -197,7 +196,7 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     xev.xclient.message_type = wm_state;
     xev.xclient.format = 32;
     xev.xclient.data.l[0] = isFullScreen ? _WM_ADD : _WM_REMOVE;
-    xev.xclient.data.l[1] = wm_fullscreen;
+    xev.xclient.data.l[1] = _windowManager._atoms._NET_WM_STATE_FULLSCREEN;
     xev.xclient.data.l[2] = 0;
 
     XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
@@ -249,10 +248,8 @@ void WindowX11::setFullScreen(bool isFullScreen) {
 
 bool WindowX11::isFullScreen() {
     // NOTE: Largely borrowed from https://github.com/godotengine/godot/blob/f7cf9fb148140b86ee5795110373a0d55ff32860/platform/linuxbsd/x11/display_server_x11.cpp
-
     Display* display = _windowManager.display;
 
-    Atom property = XInternAtom(display, "_NET_WM_STATE", False);
     Atom type;
     int format;
     unsigned long len;
@@ -260,14 +257,10 @@ bool WindowX11::isFullScreen() {
     unsigned char *data = nullptr;
     bool retval = false;
 
-    if (property == None) {
-        return retval;
-    }
-
     int result = XGetWindowProperty(
         display,
         _x11Window,
-        property,
+        _windowManager._atoms._NET_WM_STATE,
         0,
         1024,
         False,
@@ -280,9 +273,8 @@ bool WindowX11::isFullScreen() {
 
     if (result == Success) {
         Atom *atoms = (Atom *)data;
-        Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
         for (uint64_t i = 0; i < len; i++) {
-            if (atoms[i] == wm_fullscreen) {
+            if (atoms[i] == _windowManager._atoms._NET_WM_STATE_FULLSCREEN) {
                 retval = true;
                 break;
             }

@@ -451,6 +451,11 @@ void WindowManagerX11::_processXEvent(XEvent& ev) {
                     // close button clicked
                     myWindow->dispatch(EventWindowCloseRequest::kInstance);
                 }
+            } else if (ev.xclient.message_type == _atoms._NET_WM_STATE_FULLSCREEN) {
+                // if we get a full-screen event,
+                // we need to determine whether the client wants it to be fullscreen!
+                std::cout << "We're fullscreen!";
+                myWindow->dispatch(EventWindowFullScreenEnter::kInstance);
             }
             break;
         }
