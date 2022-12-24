@@ -31,26 +31,6 @@ in
           xf86inputsynaptics
           xf86inputlibinput
 
-          # xorg video modules
-          xf86videointel # may not be needed
-          xf86videoati # may not be needed
-          mesa
-
-          # xf86videofbdev
-          # xorg_sys_opengl
-
-          # driversi686Linux.mesa
-
-          # xf86videonouveau
-
-          # unsure if needed
-          # xf86videofbdev
-          # xf86videoxgi
-          # xf86videowsfb
-          # xf86videovesa
-          # xf86videovboxvideo
-          # xf86videonv
-
           # dyn libs
           libXrandr
           libXcursor

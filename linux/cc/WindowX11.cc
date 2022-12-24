@@ -1,6 +1,7 @@
 #include "WindowX11.hh"
 #include <jni.h>
 #include <memory>
+#include <cstring>
 #include "AppX11.hh"
 #include "impl/Library.hh"
 #include "impl/JNILocal.hh"
@@ -175,52 +176,94 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     //                 0,
     //                 0);
     //
-    // https://www.tonyobryan.com/index.php?article=9
-    // Hints -> MotifHints
 
-    // MotifHints hints;
-    // Atom property;
-    Display* display;
+    Display* display = _windowManager.display;
 
-    // XF86VidModeModeInfo** mode_lines;
-    // XF86VidModeModeInfo* video_mode;
-    // DefaultScreen(display)
+    // ERR_FAIL_COND(!windows.has(p_window));
+    // WindowData &wd = windows[p_window];
 
-    // display = _windowManager.getDisplay();
+    // TODO: figure out what this is
+    // p_enabled && !window_get_flag(WINDOW_FLAG_BORDERLESS, p_window)
+    bool p_enabled = true;
 
+    if (true) {
+        // remove decorations if the window is not already borderless
+        MotifHints hints;
+        Atom property;
+        hints.flags = 2;
+        hints.decorations = 0;
+        property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
+        if (property != None) {
+            XChangeProperty(display, _x11Window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
+        }
+    }
 
-    // XEvent ev;
-    // Atom atom;
+    // TODO
+    // if (p_enabled) {
+    //     // Set the window as resizable to prevent window managers to ignore the fullscreen state flag.
+    //     _update_size_hints(p_window);
+    // }
 
-    ev.type = ClientMessage;
-    ev.xclient.window = _x11Window;
-    ev.xclient.message_type = XInternAtom(display, "_NET_WM_STATE", False);
-    ev.xclient.format = 32;
-    ev.xclient.data.l[0] = isFullScreen;
-    atom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
-    ev.xclient.data.l[1] = atom;
-    ev.xclient.data.l[2] = atom;
+    // Using EWMH -- Extended Window Manager Hints
+    XEvent xev;
+    Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
+    Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
 
-    XSendEvent(display, _x11Window, False, ClientMessage, &ev);
+    memset(&xev, 0, sizeof(xev));
+    xev.type = ClientMessage;
+    xev.xclient.window = _x11Window;
+    xev.xclient.message_type = wm_state;
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = p_enabled
+        ? 1L // _windowManager._atoms._NET_WM_STATE_ADD
+        : 0L; // _windowManager._atoms._NET_WM_STATE_REMOVE;
+    xev.xclient.data.l[1] = wm_fullscreen;
+    xev.xclient.data.l[2] = 0;
 
-    // Atom wm_fullscreen = XInternAtom(_windowManager.getDisplay(),
-    //                                  "_NET_WM_STATE_FULLSCREEN",
-    //                                  isFullScreen);
+    XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
 
+    // set bypass compositor hint
+    Atom bypass_compositor = XInternAtom(display, "_NET_WM_BYPASS_COMPOSITOR", False);
+    unsigned long compositing_disable_on = 0; // Use default.
 
-    // XChangeProperty(_windowManager.getDisplay(),
-    //                 _x11Window,
-    //                 _windowManager.getAtoms()._NET_WM_STATE_FULLSCREEN,
-    //                 XA_ATOM,
-    //                 32,
-    //                 PropModeReplace,
-    //                 (unsigned char *)&wm_fullscreen, 1);
+    // TODO
+    // if (p_enabled) {
+    //     if (p_exclusive) {
+            compositing_disable_on = 1; // Force composition OFF to reduce overhead.
+    //     } else {
+    //         compositing_disable_on = 2; // Force composition ON to allow popup windows.
+    //     }
+    // }
+
+    if (bypass_compositor != None) {
+        XChangeProperty(display, _x11Window, bypass_compositor, XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&compositing_disable_on, 1);
+    }
+
+    XFlush(display);
+
+    if (!p_enabled) {
+        // Reset the non-resizable flags if we un-set these before.
+        // TODO
+        // _update_size_hints(p_window);
+
+        // put back or remove decorations according to the last set borderless state
+        MotifHints hints;
+        Atom property;
+        hints.flags = 2;
+        hints.decorations = 1; // wd.borderless ? 0 : 1;
+        property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
+        if (property != None) {
+            XChangeProperty(display, _x11Window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
+        }
+    }
 }
 
 // TODO: Always returns true; we might have to deref it from an Atom?
 // maximize code window attributes might be useful?
 bool WindowX11::isFullScreen() {
-    Atom property = XInternAtom(x11_display, "_NET_WM_STATE", False);
+    Display* display = _windowManager.display;
+
+    Atom property = XInternAtom(display, "_NET_WM_STATE", False);
     Atom type;
     int format;
     unsigned long len;
@@ -233,8 +276,8 @@ bool WindowX11::isFullScreen() {
     }
 
     int result = XGetWindowProperty(
-        x11_display,
-        wd.x11_window,
+        display,
+        _x11Window,
         property,
         0,
         1024,
@@ -248,7 +291,7 @@ bool WindowX11::isFullScreen() {
 
     if (result == Success) {
         Atom *atoms = (Atom *)data;
-        Atom wm_fullscreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", False);
+        Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
         for (uint64_t i = 0; i < len; i++) {
             if (atoms[i] == wm_fullscreen) {
                 retval = true;
