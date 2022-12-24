@@ -165,20 +165,80 @@ void WindowX11::restore() {
     }
 }
 
+
 void WindowX11::setFullScreen(bool isFullScreen) {
-    XChangeProperty(_windowManager.getDisplay(),
+    // https://www.tonyobryan.com/index.php?article=9
+    // Hints -> MotifHints
+
+    MotifHints hints;
+    Atom property;
+    Display* display;
+
+    hints.flags = 2;        // Specify that we're changing the window decorations.
+    hints.decorations = 0;  // 0 (false) means that window decorations should go bye-bye.
+
+    property = XInternAtom(_windowManager.getDisplay(),"_MOTIF_WM_HINTS",True);
+
+    // if XInternAtom aborts, we should stop here (and error?); otherwise continue to run
+
+
+    display = _windowManager.getDisplay();
+    XChangeProperty(display,
                     _x11Window,
-                    _windowManager.getAtoms()._NET_WM_STATE,
-                    XA_ATOM,
-                    8, // it's 32 bit? what if its 8?
-                    PropModeReplace, // replacing the definition
-                    (const char*)&isFullScreen, // deref the fullscreen atom
-                    1);
+                    property,
+                    property,
+                    32,
+                    PropModeReplace,
+                    (unsigned char *)&hints,
+                    5);
+
+    XF86VidModeSwitchToMode(display,
+                            DefaultScreen(display),
+                            video_mode);
+    XF86VidModeSetViewPort(display,
+                           DefaultScreen(display),
+                           0,0);
+
+    // TODO: These are teh max width and height possible for the X11 screen?
+    XMoveResizeWindow(display, _x11Window, 0,0, _width, _height);
+
+    XMapRaised(display,_x11Window);
+
+    XGrabPointer(display,
+                 _x11Window,
+                 True,
+                 0,
+                 GrabModeAsync,
+                 GrabModeAsync,
+                 _x11Window,
+                 0L,
+                 CurrentTime);
+
+    XGrabKeyboard(display,
+                  _x11Window,
+                  False,
+                  GrabModeAsync,
+                  GrabModeAsync,
+                  CurrentTime);
+
+    // Atom wm_fullscreen = XInternAtom(_windowManager.getDisplay(),
+    //                                  "_NET_WM_STATE_FULLSCREEN",
+    //                                  isFullScreen);
+
+
+    // XChangeProperty(_windowManager.getDisplay(),
+    //                 _x11Window,
+    //                 _windowManager.getAtoms()._NET_WM_STATE_FULLSCREEN,
+    //                 XA_ATOM,
+    //                 32,
+    //                 PropModeReplace,
+    //                 (unsigned char *)&wm_fullscreen, 1);
 }
 
 // TODO: Always returns true; we might have to deref it from an Atom?
+// maximize code window attributes might be useful?
 bool WindowX11::isFullScreen() {
-    return _windowManager.getAtoms()._NET_WM_FULLSCREEN;
+    return _windowManager.getAtoms()._NET_WM_STATE_FULLSCREEN;
 }
 
 void WindowX11::getDecorations(int& left, int& top, int& right, int& bottom) {
