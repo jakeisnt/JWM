@@ -591,5 +591,5 @@ extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_jwm_WindowX11__1nSetFu
 extern "C" JNIEXPORT jboolean JNICALL Java_io_github_humbleui_jwm_WindowX11__1nIsFullScreen
         (JNIEnv* env, jobject obj) {
     jwm::WindowX11* instance = reinterpret_cast<jwm::WindowX11*>(jwm::classes::Native::fromJava(env, obj));
-    return !!instance->isFullScreen();
+    return instance->isFullScreen();
 }
