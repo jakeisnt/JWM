@@ -206,6 +206,7 @@ void WindowX11::setFullScreen(bool isFullScreen) {
     unsigned long compositing_disable_on = 0; // By default, don't allow window compositing
 
     if (isFullScreen) {
+        // NOTE: Compositor flickers. May be an issue.
         if (isExclusiveFullScreen) {
             compositing_disable_on = 1; // Force compositing to disable for efficiency
         } else {
